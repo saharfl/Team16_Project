@@ -2,7 +2,7 @@ import java.util.ArrayList;
 // Class for checking surroundings of tiles
 public class SurroundingsChecker {
   // instance vars #################################
-  public String playerPiece = "X";
+  public String playerPiece = "O";
   public ArrayList<String> directions = new ArrayList<String>();
   // constructors ##################################
   //base constructor for no args
@@ -19,7 +19,7 @@ public class SurroundingsChecker {
   * @param row,col the position of the tile being checked
   * @return true if empty false if not empty
   */
-  public boolean checkEmpty(Maze1 state, int row, int column) {
+  public boolean checkEmpty(Board state, int row, int column) {
     boolean result = false;
     if (state.board[row][column] == "#" || state.board[row][column] == playerPiece) {
       result = true;
@@ -32,7 +32,7 @@ public class SurroundingsChecker {
   * @param myRow,myCol the position of the tile being checked around
   * @return a list of all the directions in which the tile is bordered by an empty space
   */
-  public ArrayList<String> checkAround(Maze1 state, int myRow, int myColumn) {
+  public ArrayList<String> checkAround(Board state, int myRow, int myColumn) {
     directions.clear();
     if (checkEmpty(state,myRow+1,myColumn)) {directions.add("down");}
     if (checkEmpty(state,myRow-1,myColumn)) {directions.add("up");}

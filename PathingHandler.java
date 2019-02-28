@@ -6,32 +6,57 @@ public class PathingHandler {
   private SurroundingsChecker surch = new SurroundingsChecker();
   private ArrayList<MapNode> open = new ArrayList<MapNode>();
   private ArrayList<MapNode> closed = new ArrayList<MapNode>();
-  private Maze1 myMaze;
+  private Board myMaze;
   private MapNode[][] nodes;
   public  boolean found = false;
+  private int playerRow;
+  private int playerColumn;
 
   /**
   * The only constructor available. Initializes the nodes which allow the pathing to work.
   * @param state the Maze which will be pathfound on.
   */
-  public PathingHandler(Maze1 state) {
+  public PathingHandler(Board state) {
     myMaze = state;
 
     nodes = new MapNode[myMaze.rows][myMaze.columns];
     for (int x = 0; x < myMaze.rows; x++) {
       for (int y = 0; y < myMaze.columns; y++) {
-        if (myMaze.board[x][y] == " ") {
+        if (myMaze.board[x][y] == " " || myMaze.board[x][y] == "X") {
           nodes[x][y] = new MapNode(x,y);
           nodes[x][y].impassible = true;
-        } else if (myMaze.board[x][y] == "X") {
+        } else if (myMaze.board[x][y] == "!") {
           nodes[x][y] = new MapNode(x,y);
           nodes[x][y].isPlayer = true;
+          playerRow = x;
+          playerColumn = y;
         } else {
           nodes[x][y] = new MapNode(x,y);
         }
       }
     }
   }
+
+  public void updateNodes(int newPlayerRow, int newPlayerColumn) {
+    nodes[playerRow][playerColumn].isPlayer = false;
+    playerRow = newPlayerRow;
+    playerColumn = newPlayerColumn;
+    nodes[playerRow][playerColumn].isPlayer = true;
+  }
+
+  public void makeNodeImpassible(int row, int col) {
+    nodes[row][col].impassible = true;
+  }
+  public void makeNodePassible(int row, int col) {
+    nodes[row][col].impassible = false;
+  }
+  public void makeNodeEnemy(int row, int col) {
+    nodes[row][col].isEnemy = true;
+  }
+  public void makeNodeNotEnemy(int row, int col) {
+    nodes[row][col].isEnemy = false;
+  }
+
 
   /**
   * Prints the closed list, used for testing purposes only
@@ -65,7 +90,7 @@ public class PathingHandler {
     int newCol = col+j;
     if (nodes[newRow][newCol].isPlayer) {
       found = true;
-      System.out.println("found");
+      //System.out.println("found: " + row + ", " + col);
     }
     if (!nodes[newRow][newCol].impassible && !closed.contains(nodes[newRow][newCol]) && !open.contains(nodes[newRow][newCol])) {
       //System.out.println("adding to open, row: " + newRow + " column: " + newCol);
@@ -105,8 +130,11 @@ public class PathingHandler {
   */
   public ArrayList<MapNode> findPath(int row, int col, int goalRow, int goalCol) {
     ArrayList<MapNode> result = new ArrayList<MapNode>();
+    result.clear();
+    found = false;
     closed.clear();
     open.clear();
+    updateNodes(goalRow, goalCol);
     int myDepth = 1;
     nodes[row][col].hValue = 0;
     nodes[row][col].gValue = 0;
@@ -134,9 +162,6 @@ public class PathingHandler {
       }
       //System.out.println("adding to closed: " + open.get(placeholder).row + ", " + open.get(placeholder).column);
       addToClosed(open.get(placeholder).row, open.get(placeholder).column, goalRow, goalCol);
-      if (myDepth == 150) {
-        myMaze.printBoard();
-      }
     }
     MapNode currentNode = closed.get(closed.size()-1);
     while (currentNode.cost != 0) {

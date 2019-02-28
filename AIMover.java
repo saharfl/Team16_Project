@@ -8,24 +8,42 @@ public class AIMover {
   // Instance Variables #######################################################
   private ArrayList<String> directions = new ArrayList<String>();
   private Random rand = new Random();
-  public Maze1 oState;
+  public Board oState;
   public int myRow;
   public int myColumn;
   private String lastPos;
   private SurroundingsChecker surch = new SurroundingsChecker("X");
   private PathingHandler path;
+  private ArrayList<MapNode> pathToUse = new ArrayList<MapNode>();
 
   // Constructors #############################################################
   /**
   * The only constructor available
   * @param myMaze,row,column the maze the ai will live in and its starting position
   */
-  public AIMover(Maze1 myMaze, int row, int column) {
+  public AIMover(Board myMaze, int row, int column) {
     oState = myMaze;
     myRow = row;
     myColumn = column;
     oState.board[myRow][myColumn] = "@";
     path = new PathingHandler(oState);
+    path.makeNodeEnemy(myRow,myColumn);
+  }
+
+  public AIMover(Board myMaze, int row, int column, PathingHandler sharedPath) {
+    oState = myMaze;
+    myRow = row;
+    myColumn = column;
+    oState.board[myRow][myColumn] = "@";
+    path = sharedPath;
+    path.makeNodeEnemy(myRow,myColumn);
+  }
+
+  public void updatePath(int playerRow, int playerColumn) {
+    pathToUse.clear();
+    ////System.out.println("updating... playerpos = " + playerRow + ", " + playerColumn);
+    ////System.out.println("mypos = " + myRow + ", " + myColumn);
+    pathToUse = path.findPath(myRow, myColumn, playerRow, playerColumn);
   }
 
   // Methods ##################################################################
@@ -54,6 +72,7 @@ public class AIMover {
   * @return none
   */
   public void moveAI(String moveDirection) {
+    path.makeNodeNotEnemy(myRow,myColumn);
     oState.board[myRow][myColumn] = "#";
     if (moveDirection == "up") {
       myRow -= 1;
@@ -65,15 +84,18 @@ public class AIMover {
           myColumn -= 1;
     }
     oState.board[myRow][myColumn] = "@";
+    path.makeNodeEnemy(myRow,myColumn);
   }
 
   // moves the ai in a random direction.
   public void randomMove() {
     int moveIndex;
     directions = surch.checkAround(oState, myRow, myColumn);
-    //System.out.println(directions);
+    //////System.out.println(directions);
     moveIndex = rand.nextInt(directions.size());
-    moveAI(directions.get(moveIndex));
+    if (!pathToUse.get(0).isEnemy) {
+      moveAI(directions.get(moveIndex));
+    }
     moveIndex = 0;
   }
 
@@ -82,7 +104,7 @@ public class AIMover {
   * @param playerRow,playerColumn position of the player.
   * @return none.
   */
-  public void hearingMove(int playerRow, int playerColumn) {
+  public void hearingMove(int playerRow, int playerColumn) { //BROKEN
     String moveDirection = "";
     boolean stuck = false;
     directions = surch.checkAround(oState, myRow, myColumn);
@@ -132,12 +154,15 @@ public class AIMover {
   * @param playerRow,playerColumn position of the player, only used for final move to "capture" player.
   * @return none.
   */
-  public void usePath(ArrayList<MapNode> pathToUse, int playerRow, int playerColumn) {
+  public void usePath(int playerRow, int playerColumn) {
+    updatePath(playerRow, playerColumn);
     if (pathToUse.size() > 0) {
+      ////System.out.println("path size: " + pathToUse.size());
       MapNode current = pathToUse.get(0);
       String moveDirection = convertToDirection(current.row, current.column);
-      moveAI(moveDirection);
-      pathToUse.remove(current);
+      if (!pathToUse.get(0).isEnemy) {
+        moveAI(moveDirection);
+      }
     } else {
       String moveDirection = convertToDirection(playerRow, playerColumn);
       moveAI(moveDirection);

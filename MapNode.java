@@ -9,6 +9,7 @@ public class MapNode {
   public MapNode parent;
   public boolean impassible = false;
   public boolean isPlayer = false;
+  public boolean isEnemy = false;
   //Constructor for position, required inputs
   public MapNode(int x, int y) {
     row = x;
